@@ -1,10 +1,11 @@
 package cn.hyrkg.tool.wrapper4nashorn;
 
+import cn.hyrkg.tool.wrapper4nashorn.object.JSWrappedFunction;
+import cn.hyrkg.tool.wrapper4nashorn.object.JSWrappedObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,8 +15,8 @@ import java.util.Map;
 public class JSWrapper {
     protected final NashornScriptEngine engine;
 
-    protected Map<String, ScriptObjectMirror> functions = new HashMap<>();
-    protected Map<String, Object> variables = new HashMap<>();
+    protected Map<String, JSWrappedFunction> functions = new HashMap<>();
+    protected Map<String, JSWrappedObject> variables = new HashMap<>();
 
     public JSWrapper(NashornScriptEngine engineIn) {
         engine = engineIn;
@@ -23,10 +24,16 @@ public class JSWrapper {
     }
 
     /*
-     * Initializes and reads all methods and variables
+     * Initializes by reads all methods and variables
      * */
     protected void initializeWrapper() {
+        for (Map.Entry<String, Object> entry : getEngineBindings().entrySet()) {
+            if (entry.getValue() instanceof ScriptObjectMirror) {
 
+            } else {
+                //treat as variables yet
+            }
+        }
     }
 
     public ScriptObjectMirror getEngineBindings() {
