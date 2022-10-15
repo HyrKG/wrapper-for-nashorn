@@ -1,7 +1,6 @@
 package cn.hyrkg.tool.wrapper4nashorn.object;
 
 import cn.hyrkg.tool.wrapper4nashorn.JSWrapper;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
