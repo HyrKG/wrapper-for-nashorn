@@ -1,6 +1,6 @@
 package cn.hyrkg.tool.wrapper4nashorn.object;
 
-import cn.hyrkg.tool.wrapper4nashorn.JSWrapper;
+import cn.hyrkg.tool.wrapper4nashorn.JSFileWrapper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -9,25 +9,28 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JSWrappedObject {
-    public final JSWrapper wrapper;
-    public final String name;
-    public final Object object;
 
-    protected Map<String, JSWrappedFunction> functions = new HashMap<>();
-    protected Map<String, JSWrappedObject> variables = new HashMap<>();
+public class JSObjectWrapped {
+    protected final JSFileWrapper wrapper;
+    protected final String name;
+    protected final Object object;
+    protected final boolean isEmpty;
+
+    protected Map<String, JSFunctionWrapped> functions = new HashMap<>();
+    protected Map<String, JSObjectWrapped> variables = new HashMap<>();
 
     protected JsonElement cacheJsonObject = null;
 
 
-    public JSWrappedObject(JSWrapper wrapper, Object object) {
+    public JSObjectWrapped(JSFileWrapper wrapper, Object object) {
         this(wrapper, "undefine", object);
     }
 
-    public JSWrappedObject(JSWrapper wrapper, String name, Object object) {
+    public JSObjectWrapped(JSFileWrapper wrapper, String name, Object object) {
         this.wrapper = wrapper;
         this.name = name;
         this.object = object;
+        isEmpty = object == null;
 
         initializeWrapper();
     }
@@ -51,36 +54,49 @@ public class JSWrappedObject {
             for (Map.Entry<String, Object> entry : thisObjectMirror.entrySet()) {
                 if (entry.getValue() instanceof ScriptObjectMirror && ((ScriptObjectMirror) entry.getValue()).isFunction()) {
                     ScriptObjectMirror objectMirror = (ScriptObjectMirror) entry.getValue();
-                    JSWrappedFunction wrappedFunction = new JSWrappedFunction(wrapper, objectMirror);
+                    JSFunctionWrapped wrappedFunction = new JSFunctionWrapped(wrapper, objectMirror);
                     functions.put(entry.getKey(), wrappedFunction);
                 } else {
                     //treat as variables yet
-                    JSWrappedObject jsWrappedObject = new JSWrappedObject(wrapper, entry.getKey(), entry.getValue());
+                    JSObjectWrapped jsWrappedObject = new JSObjectWrapped(wrapper, entry.getKey(), entry.getValue());
                     variables.put(entry.getKey(), jsWrappedObject);
                 }
             }
             JsonObject jsonObject = new JsonObject();
-            for (Map.Entry<String, JSWrappedObject> stringJSWrappedObjectEntry : variables.entrySet()) {
+            for (Map.Entry<String, JSObjectWrapped> stringJSWrappedObjectEntry : variables.entrySet()) {
                 jsonObject.add(stringJSWrappedObjectEntry.getKey(), stringJSWrappedObjectEntry.getValue().toJson());
             }
             cacheJsonObject = jsonObject;
         }
     }
 
-    public Map<String, JSWrappedFunction> getFunctions() {
+    protected <T> T get(T defaultValue) {
+        if (object == null) {
+            return defaultValue;
+        } else {
+            return (T) object;
+        }
+    }
+
+    public Map<String, JSFunctionWrapped> getFunctions() {
         return functions;
     }
 
-    public JSWrappedFunction getFunction(String name) {
+    public JSFunctionWrapped getFunction(String name) {
         return functions.get(name);
     }
 
-    public Map<String, JSWrappedObject> getVariables() {
+    public Map<String, JSObjectWrapped> getVariables() {
         return variables;
     }
 
-    public JSWrappedObject getVariable(String name) {
-        return variables.get(name);
+    public JSObjectWrapped getVariable(String name) {
+        JSObjectWrapped objectWrapped = variables.get(name);
+        if (objectWrapped == null) {
+            return new JSObjectWrapped(wrapper, null);
+        } else {
+            return variables.get(name);
+        }
     }
 
     public boolean hasVariable(String name) {
@@ -89,6 +105,18 @@ public class JSWrappedObject {
 
     public JsonElement toJson() {
         return cacheJsonObject;
+    }
+
+    public boolean isEmpty() {
+        return isEmpty;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public JSFileWrapper getWrapper() {
+        return wrapper;
     }
 
     @Override
