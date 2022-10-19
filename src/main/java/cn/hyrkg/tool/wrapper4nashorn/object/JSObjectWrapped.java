@@ -70,7 +70,15 @@ public class JSObjectWrapped {
         }
     }
 
-    protected <T> T get(T defaultValue) {
+    public String get() {
+        if (object == null) {
+            return null;
+        } else {
+            return object.toString();
+        }
+    }
+
+    public <T> T get(T defaultValue) {
         if (object == null) {
             return defaultValue;
         } else {
@@ -117,6 +125,10 @@ public class JSObjectWrapped {
 
     public JSFileWrapper getWrapper() {
         return wrapper;
+    }
+
+    public Object getObject() {
+        return object;
     }
 
     @Override
